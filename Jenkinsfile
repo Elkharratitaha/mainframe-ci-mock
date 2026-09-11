@@ -1,11 +1,16 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs 'Node20'
+    }
+
     stages {
         stage('Build Backend Java') {
             steps {
                 echo "=== Lancement du build Maven pour Java ==="
                 dir('mainframe-api') {
+                    sh 'chmod +x mvnw'
                     sh './mvnw clean package -DskipTests'
                 }
             }
