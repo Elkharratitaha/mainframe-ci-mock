@@ -1,0 +1,31 @@
+<div class="container">
+  <h2>🚀 Portail d'Aide au Développement & CI Mainframe</h2>
+  <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 20px;">
+
+  <form (ngSubmit)="onSubmit()">
+    <div style="margin-bottom: 20px;">
+      <label style="display: block; font-weight: bold; margin-bottom: 8px;">Nom du script / Job :</label>
+      <input type="text" [(ngModel)]="scriptName" name="scriptName" required placeholder="ex: cobol_batch_v1" 
+             style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ced4da; border-radius: 4px;">
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <label style="display: block; font-weight: bold; margin-bottom: 8px;">Extrait de code (Simulé COBOL) :</label>
+      <textarea [(ngModel)]="codeSnippet" name="codeSnippet" rows="6" required placeholder="IDENTIFICATION DIVISION..."
+                style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ced4da; border-radius: 4px; font-family: monospace;"></textarea>
+    </div>
+
+    <button type="submit" [disabled]="isLoading" 
+            style="background: #007bff; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; width: 100%;">
+      {{ isLoading ? 'Analyse en cours...' : 'Lancer l\'analyse CI' }}
+    </button>
+  </form>
+
+  <!-- Bloc de Résultat -->
+  <div *ngIf="result" style="margin-top: 30px; background: #e2f0d9; border: 1px solid #c8e1b7; padding: 20px; border-radius: 6px;">
+    <h3 style="color: #2b542c; margin-top: 0; font-size: 18px;">Résultat de l'analyse</h3>
+    <p style="margin: 8px 0;"><strong>ID du Job :</strong> <span style="font-family: monospace; background: #fff; padding: 2px 6px; border-radius: 3px;">{{ result.jobId }}</span></p>
+    <p style="margin: 8px 0;"><strong>Statut :</strong> <span style="color: #28a745; font-weight: bold;">{{ result.status }}</span></p>
+    <p style="margin: 8px 0;"><strong>Message :</strong> {{ result.message }}</p>
+  </div>
+</div>
