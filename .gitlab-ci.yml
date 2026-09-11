@@ -1,29 +1,28 @@
-image: maven:3.9-eclipse-temurin-17
-
 stages:
-  - build-backend
-  - build-frontend
+  - build
 
-build-java:
-  stage: build-backend
+build-backend:
+  stage: build
+  image: maven:3.9-eclipse-temurin-17
   script:
     - echo "=== Début du build du Backend Java ==="
     - cd mainframe-api
+    - chmod +x mvnw
     - ./mvnw clean package -DskipTests
-    - echo "=== Backend compilé avec succès ==="
   artifacts:
     paths:
       - mainframe-api/target/*.jar
+    expire_in: 1 hour
 
-build-angular:
-  stage: build-frontend
-  image: node:20
+build-frontend:
+  stage: build
+  image: node:20-alpine
   script:
     - echo "=== Début du build du Frontend Angular ==="
     - cd mainframe-ui
     - npm install
     - npm run build -- --configuration production
-    - echo "=== Frontend compilé avec succès ==="
   artifacts:
     paths:
       - mainframe-ui/dist/
+    expire_in: 1 hour
