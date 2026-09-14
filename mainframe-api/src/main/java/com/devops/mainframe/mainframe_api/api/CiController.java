@@ -1,11 +1,12 @@
 package com.devops.mainframe.mainframe_api.api;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/ci")
-@CrossOrigin(origins = "http://localhost:4200") // Autoriser Angular à venir taper sur notre API
+@CrossOrigin(origins = "*") // Autoriser Angular à venir taper sur notre API
 public class CiController {
 
     @PostMapping("/analyze")
