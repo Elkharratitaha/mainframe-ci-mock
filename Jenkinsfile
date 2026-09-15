@@ -1,27 +1,26 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'Node20'
+    environment {
+        DOCKER_USERNAME = 'tahael55'
+        IMAGE_TAG = 'latest' 
     }
 
     stages {
-        stage('Build Backend Java') {
+        stage('Dockerize Backend (Java)') {
             steps {
-                echo "=== Lancement du build Maven pour Java ==="
+                echo "=== Lancement du build Docker pour le Backend ==="
                 dir('mainframe-api') {
-                    sh 'chmod +x mvnw'
-                    sh './mvnw clean package -DskipTests'
+                    sh 'docker build -t ${DOCKER_USERNAME}/mainframe-api:${IMAGE_TAG} .'
                 }
             }
         }
 
-        stage('Build Frontend Angular') {
+        stage('Dockerize Frontend (Angular)') {
             steps {
-                echo "=== Lancement du build Node/Angular ==="
+                echo "=== Lancement du build Docker pour le Frontend ==="
                 dir('mainframe-ui') {
-                    sh 'npm install'
-                    sh 'npm run build -- --configuration production'
+                    sh 'docker build -t ${DOCKER_USERNAME}/mainframe-ui:${IMAGE_TAG} .'
                 }
             }
         }
@@ -29,7 +28,7 @@ pipeline {
     
     post {
         success {
-            echo "Pipeline Jenkins termine avec succes !"
+            echo "Pipeline Jenkins termine avec succes ! Images Docker creees localement."
         }
         failure {
             echo "Le pipeline a echoue. Va voir les logs !"

@@ -1,24 +1,10 @@
 stages:
-  - build
   - dockerize
   - gitops
 
 # ==========================================
-# 1. PIPELINE BACKEND 
+# 1. PIPELINE BACKEND (JAVA)
 # ==========================================
-compile_java:
-  stage: build
-  image: eclipse-temurin:17-jdk-alpine
-  rules:
-    - changes:
-        - mainframe-api/**/*
-  script:
-    - cd mainframe-api
-    - ./mvnw clean package -DskipTests
-  artifacts:
-    paths:
-      - mainframe-api/target/*.jar
-
 build_and_push_backend:
   stage: dockerize
   image: docker:24.0.5
@@ -50,7 +36,7 @@ update_k8s_backend:
     - 'git push https://oauth2:${GITHUB_TOKEN}@github.com/Elkharratitaha/mainframe-ci-mock.git main'
 
 # ==========================================
-# 2. PIPELINE FRONTEND 
+# 2. PIPELINE FRONTEND (ANGULAR)
 # ==========================================
 build_and_push_frontend:
   stage: dockerize
