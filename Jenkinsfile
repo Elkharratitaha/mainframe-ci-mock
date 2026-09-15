@@ -28,7 +28,7 @@ pipeline {
     
     post {
         success {
-            echo "Pipeline Jenkins termine avec succes ! Images Docker creees localement."
+            echo "Pipeline Jenkins termine avec succes ! Images creees."
         }
         failure {
             echo "Le pipeline a echoue. Va voir les logs !"

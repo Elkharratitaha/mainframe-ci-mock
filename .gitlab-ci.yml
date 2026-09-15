@@ -33,6 +33,7 @@ update_k8s_backend:
     - 'sed -i "s|image: $DOCKER_USERNAME/mainframe-api:.*|image: $DOCKER_USERNAME/mainframe-api:$CI_COMMIT_SHORT_SHA|g" k8s/backend.yaml'
     - git add k8s/backend.yaml
     - 'git commit -m "ci(gitops): update backend image to $CI_COMMIT_SHORT_SHA"'
+    - 'git pull --rebase https://oauth2:${GITHUB_TOKEN}@github.com/Elkharratitaha/mainframe-ci-mock.git main'
     - 'git push https://oauth2:${GITHUB_TOKEN}@github.com/Elkharratitaha/mainframe-ci-mock.git main'
 
 # ==========================================
@@ -66,4 +67,5 @@ update_k8s_frontend:
     - 'sed -i "s|image: $DOCKER_USERNAME/mainframe-ui:.*|image: $DOCKER_USERNAME/mainframe-ui:$CI_COMMIT_SHORT_SHA|g" k8s/frontend.yaml'
     - git add k8s/frontend.yaml
     - 'git commit -m "ci(gitops): update frontend image to $CI_COMMIT_SHORT_SHA"'
+    - 'git pull --rebase https://oauth2:${GITHUB_TOKEN}@github.com/Elkharratitaha/mainframe-ci-mock.git main'
     - 'git push https://oauth2:${GITHUB_TOKEN}@github.com/Elkharratitaha/mainframe-ci-mock.git main'
