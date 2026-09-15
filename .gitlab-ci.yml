@@ -3,9 +3,15 @@ stages:
   - dockerize
   - gitops
 
+# ==========================================
+# 1. PIPELINE BACKEND 
+# ==========================================
 compile_java:
   stage: build
   image: eclipse-temurin:17-jdk-alpine
+  rules:
+    - changes:
+        - mainframe-api/**/*
   script:
     - cd mainframe-api
     - ./mvnw clean package -DskipTests
@@ -13,19 +19,25 @@ compile_java:
     paths:
       - mainframe-api/target/*.jar
 
-build_and_push_image:
+build_and_push_backend:
   stage: dockerize
   image: docker:24.0.5
   services:
     - docker:24.0.5-dind
+  rules:
+    - changes:
+        - mainframe-api/**/*
   script:
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
     - docker build -t $DOCKER_USERNAME/mainframe-api:$CI_COMMIT_SHORT_SHA ./mainframe-api
     - docker push $DOCKER_USERNAME/mainframe-api:$CI_COMMIT_SHORT_SHA
 
-update_k8s_manifest:
+update_k8s_backend:
   stage: gitops
   image: alpine:latest
+  rules:
+    - changes:
+        - mainframe-api/**/*
   script:
     - apk add --no-cache git sed
     - git config --global user.email "bot@gitlab.com"
@@ -35,4 +47,37 @@ update_k8s_manifest:
     - 'sed -i "s|image: $DOCKER_USERNAME/mainframe-api:.*|image: $DOCKER_USERNAME/mainframe-api:$CI_COMMIT_SHORT_SHA|g" k8s/backend.yaml'
     - git add k8s/backend.yaml
     - 'git commit -m "ci(gitops): update backend image to $CI_COMMIT_SHORT_SHA"'
+    - 'git push https://oauth2:${GITHUB_TOKEN}@github.com/Elkharratitaha/mainframe-ci-mock.git main'
+
+# ==========================================
+# 2. PIPELINE FRONTEND 
+# ==========================================
+build_and_push_frontend:
+  stage: dockerize
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  rules:
+    - changes:
+        - mainframe-ui/**/*
+  script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - docker build -t $DOCKER_USERNAME/mainframe-ui:$CI_COMMIT_SHORT_SHA ./mainframe-ui
+    - docker push $DOCKER_USERNAME/mainframe-ui:$CI_COMMIT_SHORT_SHA
+
+update_k8s_frontend:
+  stage: gitops
+  image: alpine:latest
+  rules:
+    - changes:
+        - mainframe-ui/**/*
+  script:
+    - apk add --no-cache git sed
+    - git config --global user.email "bot@gitlab.com"
+    - git config --global user.name "GitLab CI Bot"
+    - git clone "https://oauth2:${GITHUB_TOKEN}@github.com/Elkharratitaha/mainframe-ci-mock.git"
+    - cd mainframe-ci-mock
+    - 'sed -i "s|image: $DOCKER_USERNAME/mainframe-ui:.*|image: $DOCKER_USERNAME/mainframe-ui:$CI_COMMIT_SHORT_SHA|g" k8s/frontend.yaml'
+    - git add k8s/frontend.yaml
+    - 'git commit -m "ci(gitops): update frontend image to $CI_COMMIT_SHORT_SHA"'
     - 'git push https://oauth2:${GITHUB_TOKEN}@github.com/Elkharratitaha/mainframe-ci-mock.git main'
