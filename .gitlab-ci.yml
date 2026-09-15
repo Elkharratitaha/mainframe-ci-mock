@@ -1,28 +1,38 @@
 stages:
   - build
+  - dockerize
+  - gitops
 
-build-backend:
+compile_java:
   stage: build
-  image: maven:3.9-eclipse-temurin-17
+  image: eclipse-temurin:17-jdk-alpine
   script:
-    - echo "=== Début du build du Backend Java ==="
     - cd mainframe-api
-    - chmod +x mvnw
     - ./mvnw clean package -DskipTests
   artifacts:
     paths:
       - mainframe-api/target/*.jar
-    expire_in: 1 hour
 
-build-frontend:
-  stage: build
-  image: node:20-alpine
+build_and_push_image:
+  stage: dockerize
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
   script:
-    - echo "=== Début du build du Frontend Angular ==="
-    - cd mainframe-ui
-    - npm install
-    - npm run build -- --configuration production
-  artifacts:
-    paths:
-      - mainframe-ui/dist/
-    expire_in: 1 hour
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - docker build -t $DOCKER_USERNAME/mainframe-api:$CI_COMMIT_SHORT_SHA ./mainframe-api
+    - docker push $DOCKER_USERNAME/mainframe-api:$CI_COMMIT_SHORT_SHA
+
+update_k8s_manifest:
+  stage: gitops
+  image: alpine:latest
+  script:
+    - apk add --no-cache git sed
+    - git config --global user.email "bot@gitlab.com"
+    - git config --global user.name "GitLab CI Bot"
+    - git clone "https://oauth2:${GITHUB_TOKEN}@github.com/Elkharratitaha/mainframe-ci-mock.git"
+    - cd mainframe-ci-mock
+    - 'sed -i "s|image: $DOCKER_USERNAME/mainframe-api:.*|image: $DOCKER_USERNAME/mainframe-api:$CI_COMMIT_SHORT_SHA|g" k8s/backend.yaml'
+    - git add k8s/backend.yaml
+    - 'git commit -m "ci(gitops): update backend image to $CI_COMMIT_SHORT_SHA"'
+    - 'git push https://oauth2:${GITHUB_TOKEN}@github.com/Elkharratitaha/mainframe-ci-mock.git main'
