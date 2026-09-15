@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: tahael55/mainframe-api:1.2
+        image: tahael55/mainframe-api:d1552d4f
         ports:
         - containerPort: 8080
 ---
