@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: tahael55/mainframe-ui:1.0
+        image: tahael55/mainframe-ui:95b397c4
         ports:
         - containerPort: 80
 ---
