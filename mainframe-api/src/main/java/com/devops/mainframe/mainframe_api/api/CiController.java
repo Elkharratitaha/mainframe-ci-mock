@@ -6,7 +6,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/ci")
-@CrossOrigin(origins = "*") // Autoriser Angular à venir taper sur notre API
+@CrossOrigin(origins = "*") // Autoriser Angular à venir taper sur l'API
 public class CiController {
 
     @PostMapping("/analyze")
