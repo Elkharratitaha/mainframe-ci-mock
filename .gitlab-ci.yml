@@ -1,11 +1,14 @@
 stages:
   - dockerize
+  - security_scan
   - gitops
 
-# ==========================================
-# 1. PIPELINE BACKEND (JAVA)
-# ==========================================
-build_and_push_backend:
+# ==============================================================================
+# PIPELINE BACKEND (JAVA)
+# ==============================================================================
+
+# Construction et sauvegarde de l'image Docker du backend
+build_backend:
   stage: dockerize
   image: docker:24.0.5
   services:
@@ -14,12 +17,48 @@ build_and_push_backend:
     - changes:
         - mainframe-api/**/*
   script:
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    # Construction de l'image Docker locale
     - docker build -t $DOCKER_USERNAME/mainframe-api:$CI_COMMIT_SHORT_SHA ./mainframe-api
-    - docker push $DOCKER_USERNAME/mainframe-api:$CI_COMMIT_SHORT_SHA
+    # Sauvegarde sous forme d'archive tar pour transmission au scanner de sécurité
+    - docker save $DOCKER_USERNAME/mainframe-api:$CI_COMMIT_SHORT_SHA -o backend-image.tar
+  artifacts:
+    paths:
+      - backend-image.tar
+    expire_in: 1 hour
 
+# Analyse des vulnérabilités de l'image backend avec Trivy (Shift-Left Security)
+trivy_scan_backend:
+  stage: security_scan
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  rules:
+    - changes:
+        - mainframe-api/**/*
+  script:
+    - echo "=== Scan de securite de l'image Backend avec Trivy ==="
+    # Analyse de l'archive tar : interruption du pipeline en cas de sévérité HIGH ou CRITICAL
+    - trivy image --input backend-image.tar --severity HIGH,CRITICAL --exit-code 1
+
+# Publication de l'image backend validée sur Docker Hub
+push_backend:
+  stage: gitops
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  rules:
+    - changes:
+        - mainframe-api/**/*
+  script:
+    # Authentification et publication sur le registre Docker Hub
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - docker load -i backend-image.tar
+    - docker push $DOCKER_USERNAME/mainframe-api:$CI_COMMIT_SHORT_SHA
+    
+# Mise à jour du manifeste Kubernetes via GitOps
 update_k8s_backend:
   stage: gitops
+  needs: [push_backend]
   image: alpine:latest
   rules:
     - changes:
@@ -28,18 +67,23 @@ update_k8s_backend:
     - apk add --no-cache git sed
     - git config --global user.email "bot@gitlab.com"
     - git config --global user.name "GitLab CI Bot"
+    # Clonage du dépôt de configuration GitOps
     - git clone "https://oauth2:${GITHUB_TOKEN}@github.com/Elkharratitaha/mainframe-ci-mock.git"
     - cd mainframe-ci-mock
+    # Mise à jour du tag de l'image dans le manifeste
     - 'sed -i "s|image: $DOCKER_USERNAME/mainframe-api:.*|image: $DOCKER_USERNAME/mainframe-api:$CI_COMMIT_SHORT_SHA|g" k8s/backend.yaml'
     - git add k8s/backend.yaml
     - 'git commit -m "ci(gitops): update backend image to $CI_COMMIT_SHORT_SHA"'
+    # Récupération des modifications distantes pour éviter les conflits concurrents
     - 'git pull --rebase https://oauth2:${GITHUB_TOKEN}@github.com/Elkharratitaha/mainframe-ci-mock.git main'
     - 'git push https://oauth2:${GITHUB_TOKEN}@github.com/Elkharratitaha/mainframe-ci-mock.git main'
 
-# ==========================================
-# 2. PIPELINE FRONTEND (ANGULAR)
-# ==========================================
-build_and_push_frontend:
+# ==============================================================================
+# PIPELINE FRONTEND (ANGULAR)
+# ==============================================================================
+
+# Construction et sauvegarde de l'image Docker du frontend
+build_frontend:
   stage: dockerize
   image: docker:24.0.5
   services:
@@ -48,12 +92,44 @@ build_and_push_frontend:
     - changes:
         - mainframe-ui/**/*
   script:
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
     - docker build -t $DOCKER_USERNAME/mainframe-ui:$CI_COMMIT_SHORT_SHA ./mainframe-ui
+    - docker save $DOCKER_USERNAME/mainframe-ui:$CI_COMMIT_SHORT_SHA -o frontend-image.tar
+  artifacts:
+    paths:
+      - frontend-image.tar
+    expire_in: 1 hour
+
+# Analyse des vulnérabilités de l'image frontend avec Trivy
+trivy_scan_frontend:
+  stage: security_scan
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  rules:
+    - changes:
+        - mainframe-ui/**/*
+  script:
+    - echo "=== Scan de securite de l'image Frontend avec Trivy ==="
+    - trivy image --input frontend-image.tar --severity HIGH,CRITICAL --exit-code 1
+
+# Publication de l'image frontend validée sur Docker Hub
+push_frontend:
+  stage: gitops
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  rules:
+    - changes:
+        - mainframe-ui/**/*
+  script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - docker load -i frontend-image.tar
     - docker push $DOCKER_USERNAME/mainframe-ui:$CI_COMMIT_SHORT_SHA
 
+# Mise à jour du manifeste Kubernetes pour le frontend
 update_k8s_frontend:
   stage: gitops
+  needs: [push_frontend]
   image: alpine:latest
   rules:
     - changes:
