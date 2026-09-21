@@ -9,6 +9,9 @@
 ![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-brightgreen?logo=argo)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-Deployment-blue?logo=kubernetes)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)
+![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?logo=terraform)
+![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C?logo=prometheus)
+![Grafana](https://img.shields.io/badge/Grafana-Dashboard-F46800?logo=grafana)
 
 ## 📖 Description du Projet
 Ce projet est une preuve de concept (POC) full-stack simulant un portail interne d'aide au développement et d'intégration continue pour un environnement Mainframe. L'application permet de soumettre des scripts de code, de déclencher des analyses factices et de consulter l'historique des exécutions.
@@ -45,12 +48,19 @@ Le cycle de vie de l'application repose sur une séparation stricte des responsa
    <img width="1612" height="602" alt="image" src="https://github.com/user-attachments/assets/a2326add-7723-4f4b-aae6-4133fec3f1d0" />
    <img width="1628" height="627" alt="image" src="https://github.com/user-attachments/assets/397507df-3aea-44e6-8fff-7cc6b4400cdc" />
 
-
+4. **Infrastructure as Code (IaC) & Observabilité (Terraform, Prometheus, Grafana)** :
+   
+   - Provisioning automatisé des espaces de travail isolés (*Namespaces*) et déploiement de la stack d'observabilité via **Terraform** (Provider Helm).
+   
+   - Collecte en temps réel des métriques du cluster et des ressources applicatives avec **Prometheus**.
+   
+   - Visualisation des performances et surveillance de l'état de santé via les Dashboards **Grafana**.
 
 ## 📂 Structure du Monorepo
 Le dépôt est structuré de la manière suivante pour faciliter la séparation des environnements :
 
 - 📁 `k8s/` : Manifestes Kubernetes de l'infrastructure (Déploiements, Services).
+- 📁 `terraform/` : Scripts d'Infrastructure as Code (IaC) pour provisionner les namespaces et la stack de monitoring.
 - 📁 `mainframe-api/` : Code source du backend (API REST Java/Spring Boot).
 - 📁 `mainframe-ui/` : Code source du frontend (Interface Utilisateur Angular).
 - 📄 `.gitlab-ci.yml` : Pipeline de build Docker, sécurité Trivy et publication GitOps.
@@ -59,13 +69,14 @@ Le dépôt est structuré de la manière suivante pour faciliter la séparation 
 
 ## 🚀 Lancement de l'Application
 
-Vous pouvez lancer ce projet de trois manières différentes, selon votre besoin (Développement, Conteneurisé ou Cluster).
+Vous pouvez lancer ce projet de quatre manières différentes, selon votre besoin (Développement, Conteneurisé, Cluster ou Infrastructure Automatisée).
 
 ### 🛠️ Prérequis
 - **JDK 17** & **Maven**
 - **Node.js** (v20+)
 - **Docker** & **Docker Compose**
 - Un cluster **Kubernetes** local (ex: Docker Desktop, Minikube) avec **ArgoCD** installé.
+- **Terraform** (pour le provisionnement de l'infrastructure d'observabilité).
 
 ---
 
@@ -98,7 +109,7 @@ Depuis la racine du projet, exécutez :
 ```bash
 docker-compose up --build -d
 ```
-*L'application complète (Frontend + Backend liés) sera accessible sur le port configuré dans le fichier `docker-compose.yml` (généralement `http://localhost:80`).*
+*L'application complète (Frontend + Backend liés) sera accessible sur le port configuré dans le fichier `docker-compose.yml`.*
 *Pour stopper l'environnement : `docker-compose down`.*
 
 ---
@@ -117,6 +128,22 @@ kubectl apply -f k8s/frontend.yaml
 kubectl port-forward svc/frontend-service 8080:80
 ```
 *L'application sera accessible via : `http://localhost:8080`*
+
+### Option 4 : Déploiement de l'Infrastructure et Monitoring (Terraform)
+Idéal pour provisionner automatiquement la stack d'observabilité (Prometheus & Grafana) dans votre cluster Kubernetes.
+
+**1. Initialiser et appliquer la configuration Terraform :
+```bash
+cd terraform
+terraform init
+terraform apply -auto-approve
+```
+
+**2. Accéder au Dashboard Grafana :
+```bash
+kubectl port-forward svc/prometheus-stack-grafana 8081:80 -n monitoring
+```
+L'interface Grafana sera accessible via : http://localhost:8081 (Identifiants par défaut à récupérer via les secrets Kubernetes).
 
 ## 👨‍💻 Auteur
 **Mohamed Taha Elkharrati**  
