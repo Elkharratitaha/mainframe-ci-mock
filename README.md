@@ -21,13 +21,21 @@ Le cycle de vie de l'application repose sur une séparation stricte des responsa
 1. **Intégration Continue (Jenkins) - *Le Quality Gate*** :
    - Exécution des builds locaux (Maven pour Java, Node.js pour Angular).
    - Validation syntaxique et vérification de l'intégrité du code source avant toute conteneurisation.
-2. **Conteneurisation & Sécurité (GitLab CI & Trivy)** :
+   <img width="1460" height="202" alt="image" src="https://github.com/user-attachments/assets/469d1834-96b1-4ca8-bb83-604e1fa957d9" />
+
+3. **Conteneurisation & Sécurité (GitLab CI & Trivy)** :
    - Création d'images Docker légères et optimisées via un *Multi-stage build*.
    - **Shift-Left Security** : Analyse statique des conteneurs avec Trivy. Le pipeline est configuré pour bloquer le déploiement (`--exit-code 1`) si des vulnérabilités `HIGH` ou `CRITICAL` sont détectées.
    - Mise à jour automatique des manifestes Kubernetes via un bot Git (GitOps).
-3. **Déploiement Continu (ArgoCD & Kubernetes)** :
+   <img width="1216" height="353" alt="image" src="https://github.com/user-attachments/assets/5bd675d5-d381-4620-80de-c2ed78e44b25" />
+
+5. **Déploiement Continu (ArgoCD & Kubernetes)** :
    - **Synchronisation Pull** : ArgoCD écoute les modifications sur la branche `main` du dépôt.
    - Déploiement automatisé des nouveaux Pods dans le cluster avec auto-healing et gestion de la dérive de configuration.
+   <img width="1612" height="602" alt="image" src="https://github.com/user-attachments/assets/a2326add-7723-4f4b-aae6-4133fec3f1d0" />
+   <img width="1628" height="627" alt="image" src="https://github.com/user-attachments/assets/397507df-3aea-44e6-8fff-7cc6b4400cdc" />
+
+
 
 ## 📂 Structure du Monorepo
 Le dépôt est structuré de la manière suivante pour faciliter la séparation des environnements :
