@@ -19,13 +19,15 @@ L'objectif de ce dépôt est double : démontrer la capacité à concevoir une a
 Le cycle de vie de l'application repose sur une séparation stricte des responsabilités (approche *Best of Breed*) :
 
 1. **Intégration Continue (Jenkins) - *Le Quality Gate*** :
+   
    - Exécution des builds locaux (Maven pour Java, Node.js pour Angular).
    
    - Validation syntaxique et vérification de l'intégrité du code source avant toute conteneurisation.
    
    <img width="1460" height="202" alt="image" src="https://github.com/user-attachments/assets/469d1834-96b1-4ca8-bb83-604e1fa957d9" />
 
-3. **Conteneurisation & Sécurité (GitLab CI & Trivy)** :
+2. **Conteneurisation & Sécurité (GitLab CI & Trivy)** :
+   
    - Création d'images Docker légères et optimisées via un *Multi-stage build*.
    
    - **Shift-Left Security** : Analyse statique des conteneurs avec Trivy. Le pipeline est configuré pour bloquer le déploiement (`--exit-code 1`) si des vulnérabilités `HIGH` ou `CRITICAL` sont détectées.
@@ -34,7 +36,8 @@ Le cycle de vie de l'application repose sur une séparation stricte des responsa
    
    <img width="1216" height="353" alt="image" src="https://github.com/user-attachments/assets/5bd675d5-d381-4620-80de-c2ed78e44b25" />
 
-5. **Déploiement Continu (ArgoCD & Kubernetes)** :
+3. **Déploiement Continu (ArgoCD & Kubernetes)** :
+   
    - **Synchronisation Pull** : ArgoCD écoute les modifications sur la branche `main` du dépôt.
    
    - Déploiement automatisé des nouveaux Pods dans le cluster avec auto-healing et gestion de la dérive de configuration.
